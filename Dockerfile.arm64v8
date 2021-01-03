@@ -1,0 +1,68 @@
+#Smallest base image
+FROM arm64v8/debian:buster-20201209-slim
+
+#dynamic build arguments coming from the /hook/build file
+ARG BUILD_DATE
+ARG VCS_REF
+
+#see hooks/post_checkout
+ARG ARCH
+
+#metadata labels
+LABEL org.label-schema.build-date=$BUILD_DATE \
+      org.label-schema.vcs-url="https://github.com/HilscherAutomation/netPI-openvpn" \
+      org.label-schema.vcs-ref=$VCS_REF
+
+#version
+ENV HILSCHERNETPI_OPENPVN_VERSION 1.0.0
+
+#labeling
+LABEL maintainer="netpi@hilscher.com" \
+      version=$HILSCHERNETPI_OPENVPN_VERSION \
+      description="OpenVPN"
+
+ADD ./misc/qemu-aarch64-static /usr/bin/
+
+#create mapable volume folder "data"
+RUN mkdir /etc/data \
+    && mkdir /etc/data/home \
+    && mkdir /etc/data/pivpn \
+    && mkdir /etc/data/openvpn \
+    && rm -r /home \
+    && ln -s /etc/data/home /home \
+    && ln -s /etc/data/pivpn /etc/pivpn \
+    && ln -s /etc/data/openvpn /etc/openvpn
+
+#install tools needed
+RUN apt update \
+    && DEBIAN_FRONTEND=noninteractive apt -y -q install openvpn libtext-iconv-perl iptables-persistent shellinabox curl whiptail iproute2 procps lighttpd sed tree inotify-tools nginx \
+    && curl -k -L https://install.pivpn.io -o /bin/configure \
+    && chmod +x /bin/configure \
+    && apt -y upgrade \
+    && apt -y remove curl \
+    && apt -y autoremove \
+    && apt -y clean \
+    && rm -rf /tmp/* \
+    && rm -rf /var/lib/apt/lists/*
+
+#configure web server
+RUN sed -i 's@= 80@= 4201@g' -i /etc/lighttpd/lighttpd.conf \
+    && sed -i 's@"/var/www/html"@"/home/"@g' -i /etc/lighttpd/lighttpd.conf \
+    && tree -C -T "Clients OpenVPN config files (.ovpn)" -I "*.html" -P "*" --dirsfirst -F -r -H . /home/ > /home/index.html \
+    && sed -i 's@</title>@</title><meta http-equiv="refresh" content="2;url=index.html">@g' -i /home/index.html \
+    && sed -i 's@</body>@<button onClick="window.location.reload();">Click to refresh page</button></body>@g' -i /home/index.html 
+
+#configure reverse proxy
+ADD ./nginx/reverse-proxy.conf /etc/nginx/sites-available
+RUN ln -s /etc/nginx/sites-available/reverse-proxy.conf /etc/nginx/sites-enabled/reverse-proxy.conf \
+    && unlink /etc/nginx/sites-enabled/default
+
+#copy files
+COPY "./init.d/*" /etc/init.d/
+
+#set the entrypoint
+ENTRYPOINT ["/etc/init.d/entrypoint.sh"]
+
+#set STOPSGINAL
+STOPSIGNAL SIGTERM
+

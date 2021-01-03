@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -eu
+
+echo "🔵 pre_build"
+
+echo "✅ Register qemu-*-static once for all supported processos"
+echo "⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯"
+
+docker run --rm --privileged multiarch/qemu-user-static:register --reset
+
