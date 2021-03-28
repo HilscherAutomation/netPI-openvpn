@@ -2,6 +2,10 @@
 
 Made for Raspberry Pi 3B architecture based devices and compatibles
 
+### Docker repository
+
+https://hub.docker.com/r/hilschernetpi/netpi-openvpn/
+
 ### Container features 
 
 The image provided hereunder deploys an OpenVPN server, a web shell to configure the server and a web page to download created *.ovpn configuration files for connecting OpenVPN clients.
@@ -84,13 +88,13 @@ Parameter | Value | Remark
 *Image* | **hilschernetpi/netpi-openvpn:latest** |
 *Network > Network* | **bridge** |
 *Restart policy* | **always**
-*Runtime > Env* | *name* **WEBPORT** -> *value* **any unused port** | for other port than 8008
 *Port mapping* | *host* **8008** -> *container* **8008** **TCP** or <br> **WEBPORT** value -> *container* **WEBPORT** value **TCP/UDP** | default or alternative port/protocol
 *Port mapping* | *host* **1194** -> *container* **1194** **UDP** | same port as configured with PiVPN installer at runtime
-*Runtime > Devices > +add device* | *Host path* **/dev/net/tun** -> *Container path* **/dev/net/tun** |
-*Volumes > Volume mapping > map additional volume* | *volume* **data** -> *container* **/etc/data** | for configuration persistence
+*Adv.con.set. > Env* | *name* **WEBPORT** -> *value* **any unused port** | for other port than 8008
+*Adv.con.set. > Devices > +add device* | *Host path* **/dev/net/tun** -> *Container path* **/dev/net/tun** |
+*Adv.con.set. > Volumes > +map additional volume* | *volume* **data** -> *container* **/etc/data** | for configuration persistence
 *Capabilities > NET_ADMIN* | **Enabled** |  
-*Runtime > Privileged mode* | **On** |
+*Adv.con.set. > Runt. & Res. > Privileged mode* | **On** |
 
 STEP 5. Press the button *Actions > Start/Deploy container*
 
